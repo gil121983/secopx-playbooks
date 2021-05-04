@@ -1,0 +1,44 @@
+##   SECOPX CONFIGURATIONS FILE (for use with sensor instalation playbook)
+
+## Server Configuration ##
+# secopx sensor set by default to track apache2 logs.
+# If you use any other webserver, change logs paths to your logs location.
+WEBSERVER_DIR: '/var/lib/docker'
+SYSLOG_FILE: '/var/log/syslog'
+ERROR_LOG_FILE: "/var/log/apache2/error.log"
+ACCESS_LOG_FILE: "/var/log/apache2/access.log"
+LOG_MESSAGES: '/var/log/messages'
+MAIL_LOG_FILE: '/var/log/maillog'
+
+## Containers ##
+CONTAINER_ENV: ''
+VOLUMES_DIR: ""
+REGISTRY_VOL: ""
+
+## Custom Log (optional)##
+# redirect your application log to a file and add it's full path here
+# our text analysis engine will parse it to calculate risk level
+CUSTOM_LOG: "none" 
+
+## Quarantine ##
+# By default the sensor will quarantine any suspicius file found including suspecius as crypto-mining files
+# if you use crypto-mining on your server, set quarantine crypto to false
+QUARANTINE_CRYPTO: 'true'
+
+## Report  mode ##
+# Will not quarantine files, only report incidents
+REPORT_MODE: 'false'
+
+## File size limit for testing with yara ##
+# b 512-byte blocks 
+# c bytes
+# k kilobytes 
+# w 2-byte words
+# M Megabytes 
+# G Gigabytes 
+YARA_SIZE_LIMIT: '10M'
+
+## Deep scan mode ##
+#Runs scans on all files found in the web server directory
+#Not recomended for servers containing more than 150,000 files!
+DEEP_SCAN_MODE: 'false'
