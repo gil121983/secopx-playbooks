@@ -4,18 +4,33 @@
   sudo: no
   tasks:
         
-    - name: instal prerequisits
-      ansible.builtin.package:
+    - name: install prerequisits
+      package:
           name: 
+              - make
               - wget
               - zip
           state: latest
+
+    - name: Clean earlyer secopx-sensor
+      file: 
+          path: /root/secopx-sensor.zip
+          state: absent
+
+    - name: Clean earlyer IntruSense
+      file:
+          path: /root/IntruSense-v30
+          state: absent
 
     - name: Download zip file from secopx.com
       command: chdir=/root/ wget https://secopx.com/secopx-sensor.zip
             
     - name: Extract zip
-      command: chdir=/root/ wget unzip secopx-sensor.zip
+      unarchive:
+              src: /root/secopx-sensor.zip
+              dest: /root/
+              remote_src: yes
+
 
     - name: Include uuid list
       include_vars: uuid_list.yml
@@ -24,12 +39,12 @@
       copy:
           dest: "/root/IntruSense-v30/License_{{ play_hosts.index(inventory_hostname) }}.txt"
           content: |
-                "# Secopx.com User License"
-                "# ======================="
-                "# This file should be placed at the sensor's working folder."
-                "Key: {{ uuid[play_hosts.index(inventory_hostname)] | from_yaml  }}"
-                "Password: {{ tmp_pwd | from_yaml }}"
-                "Name: {{ username | from_yaml }}"
+                Secopx.com User License
+                =======================
+                This file should be placed at the sensor's working folder.
+                Key: {{ uuid[play_hosts.index(inventory_hostname)] | from_yaml  }}
+                Password: {{ tmp_pwd | from_yaml }}
+                Name: {{ username | from_yaml }}
 
     - name: Include configurations file 
       include_vars: config.yml
@@ -38,20 +53,27 @@
       copy:
           dest: "/root/IntruSense-v30/secopx.conf"
           content: |
-                'WEBSERVER_DIR="{{ WEBSERVER_DIR | from_yaml }}"'
-                'SYSLOG_FILE="{{ SYSLOG_FILE  | from_yaml }}"'
-                'ERROR_LOG_FILE="{{ ERROR_LOG_FILE  | from_yaml }}"'
-                'ACCESS_LOG_FILE="{{ ACCESS_LOG_FILE | from_yaml }}"'
-                'LOG_MESSAGES="{{ LOG_MESSAGES | from_yaml }}"'
-                'MAIL_LOG_FILE="{{ MAIL_LOG_FILE  | from_yaml }}"'
-                'CONTAINER_ENV="{{ CONTAINER_ENV | from_yaml }}"'
-                'VOLUMES_DIR="{{ VOLUMES_DIR | from_yaml }}"'
-                'REGISTRY_VOL="{{ REGISTRY_VOL | from_yaml }}"'
-                'CUSTOM_LOG="{{ CUSTOM_LOG | from_yaml }}"'
-                'QUARANTINE_CRYPTO="{{ QUARANTINE_CRYPTO | from_yaml }}"'
-                'REPORT_MODE="{{ REPORT_MODE | from_yaml }}"'
-                'YARA_SIZE_LIMIT="{{ YARA_SIZE_LIMIT | from_yaml }}"'
-                'DEEP_SCAN_MODE="{{ DEEP_SCAN_MODE | from_yaml }}"'
+                WEBSERVER_DIR="{{ WEBSERVER_DIR | from_yaml }}"
+                SYSLOG_FILE="{{ SYSLOG_FILE  | from_yaml }}"
+                ERROR_LOG_FILE="{{ ERROR_LOG_FILE  | from_yaml }}"
+                ACCESS_LOG_FILE="{{ ACCESS_LOG_FILE | from_yaml }}"
+                LOG_MESSAGES="{{ LOG_MESSAGES | from_yaml }}"
+                MAIL_LOG_FILE="{{ MAIL_LOG_FILE  | from_yaml }}"
+                CONTAINER_ENV="{{ CONTAINER_ENV | from_yaml }}"
+                VOLUMES_DIR="{{ VOLUMES_DIR | from_yaml }}"
+                REGISTRY_VOL="{{ REGISTRY_VOL | from_yaml }}"
+                CUSTOM_LOG="{{ CUSTOM_LOG | from_yaml }}"
+                QUARANTINE_CRYPTO="{{ QUARANTINE_CRYPTO | from_yaml }}"
+                REPORT_MODE="{{ REPORT_MODE | from_yaml }}"
+                YARA_SIZE_LIMIT="{{ YARA_SIZE_LIMIT | from_yaml }}"
+                DEEP_SCAN_MODE="{{ DEEP_SCAN_MODE | from_yaml }}"
 
     - name: Run convenient installation script
-      command: chdir=/root/IntruSense-v30/convenient-installation-script.bash
+      command: chdir=/root/IntruSense-v30/ ./convenient-installation-script.bash --ansible
+
+    - name: Run initial scan
+      command: chdir=/opt/IntruSense-v30 ./secopx
+
+    - name: start service
+      command: systemctl start secopx
+      ignore_errors: yes
